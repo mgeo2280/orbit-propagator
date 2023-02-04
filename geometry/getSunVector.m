@@ -1,13 +1,11 @@
-function rSun = getSunVector(JDN, t)
+function rSun = getSunVector(OE)
 % Function calculates the sun vector, from the earth to the sun
 % using the method in "Fundamentals of Astrodynamics and 
 % Applications" by David A. Vallado.
 % Mark George
 %
 % Input Arguments
-% JDN      - Julian Day Number to start calculation
-% t        - Array of times for the orbit in seconds. t = 0 corresponds to
-%            the given JDN above.
+% OE      - struct of (time varying) orbital elements
 %
 % Output Arguments
 % rSun    - Vector from center of ECI frame to the sun in meters.
@@ -15,6 +13,9 @@ function rSun = getSunVector(JDN, t)
 % Astronomical units
 AU = 1.496e11;
 
+% Unpack
+JDN = OE.JDN;
+t   = OE.t;
 
 TUT1 = (JDN + t/60/60/24 - 2451545)/36528;
 lambdaM = 280.4606184 + 36000.77005361*TUT1;
@@ -27,4 +28,6 @@ rSun = [rcirc.*cosd(lambdaE);
     rcirc.*cosd(epsilon).*sind(lambdaE);
     rcirc.*sind(epsilon).*sind(lambdaE)];
 rSun = rSun*AU;
+
+end
 

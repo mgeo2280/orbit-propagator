@@ -1,10 +1,8 @@
 % Study of optical axis angles with sun and earth over time
-% Creates heatmaps of telescope viewing times to alpha-Cen by simulating
+% Creates heatmaps of viewing times to alpha-Cen by simulating
 % orbit at each Solar Right Ascension (SRA) and Right Ascension of
-% Ascending Node (RAAN). Viewing times are based on minimal angles between
-% the optical axis and the Sun and Earth.
-% Set initial orbital parameteres in the getOrbitalParameters.m script
-% file.
+% Ascending Node (RAAN). Viewing times are based on minimum permissible 
+% angles between the optical axis and the Sun and Earth.
 %
 % Mark George
 
@@ -13,10 +11,10 @@
 clear;
 clc;
 close all;
-plotSetup()
+plotConfig()
 
 % Function paths
-addpath('Coordinate Transformations', 'Orbit Propagation', 'Graphical', 'Analysis');
+addpath('propagator', 'transformations', 'geometry', 'graphics');
 
 % Constants
 mu = 3.986004418e14;
@@ -24,31 +22,30 @@ Re = 6371e3;
 sigma = 5.670374419e-8;
 
 % Get initial orbital parameters
-OE0 = getOrbitalParameters();
-h = OE0(1);
-e = OE0(2);
-RA0 = OE0(3);
-incl = OE0(4);
-w0 = OE0(5);
-a = OE0(6);
-t0 = OE0(7);
-M0 = OE0(8);
-n = OE0(9);
-JDN = OE0(10);
+% TLE set initial conditions
+TLE.epochYear    = 2023;
+TLE.epochDay     = 4;
+TLE.inclination  = 15;
+TLE.eccentricity = 0;
+TLE.RAAN         = 85;
+TLE.argOfPerigee = 10;
+TLE.meanAnomaly  = 1;
+TLE.meanMotion   = 15.2;
+OE0 = tle2oe(TLE);
 
 % Set to true if doing an SSO orbit, this will plot RAAN-SRA on the
 % vertical axis instead of just RAAN.
 SSO = false;
 
 % Duration to run simulation, and timestep.
-Torb = (2*pi/sqrt(mu))*a^(3/2);         % Orbital Period
+Torb = (2*pi/sqrt(mu))*OE0.semimajorAxis^(3/2);         % Orbital Period
 tRun = Torb;                            % Plot orbits over a year
 dt = 30;                                % Timestep, this needs to be small enough to give accurave viewing times
         
 % Run simulation and obtain classical orbital parameters as funciton of
 % time
 perturbations = false;                  % Best leave these off for heatmap creation
-[TA, RA, w, t] = propagateOrbit(OE0, tRun, dt, perturbations);
+OE = propagateOrbit(OE0, tRun, dt, perturbations);
 
 % Minimum allowable angle between the optical axis and sun and earth
 sunAngleMin = deg2rad(90);
@@ -106,16 +103,16 @@ for i = 1:length(SRA)
         
         % Set the orbital element
         if SSO
-            OE0(3) = SRA(i) + deltaRA(j);
+            OE0.RAAN = SRA(i) + deltaRA(j);
         else
-            OE0(3) = RA0(j);
+            OE0.RAAN = RA0(j);
         end
         
         % Propagate the orbit
-        [TA, RA, w, t] = propagateOrbit(OE0, tRun, dt, perturbations);
+        OE = propagateOrbit(OE0, tRun, dt, perturbations);
         
         % Satellite in ECI Frame
-        [xECI, yECI, zECI, vxECI, vyECI, vzECI] = oe2ECI(h, e, RA, incl, w, TA);
+        [xECI, yECI, zECI, vxECI, vyECI, vzECI] = oe2ECI(OE);
         rECI = [xECI; yECI; zECI];
         
         % RA and DEC of alpha cen and the sun
@@ -167,12 +164,12 @@ accessTimeEclipseSmooth(EclipseZeros) = 0;
 tMax = 2300;            % Colourbar limit, set it for consistency between Sun and eclipse plots
 titleString = 'In Sun';
 plotHeatMap(accessTimeSunSmooth, RA0, SRA, titleString, tMax, SSO)
-saveas(gcf, 'sso_sun_heatmap.png')
+% saveas(gcf, 'sso_sun_heatmap.png')
 
 % Eclipse
 titleString = 'Eclipse';
 plotHeatMap(accessTimeEclipseSmooth, RA0, SRA, titleString, tMax, SSO)
-saveas(gcf, 'sso_eclipse_heatmap.png')
+% saveas(gcf, 'sso_eclipse_heatmap.png')
 
 
 %%

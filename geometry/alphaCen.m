@@ -7,6 +7,6 @@ function [RA, DEC] = alphaCen()
 RA = 14*pi/12 + 39*pi/720 + 6.49400*pi/43200;
 
 % Convert declination from DMS
-DEC = deg2rad(dms2degrees([-60, 50, 2.3737]));
+DEC = deg2rad(dms2deg(-60, 50, 2.3737));
 
 end

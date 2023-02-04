@@ -1,5 +1,5 @@
-function plotSetup()
-%% Plot parameters
+function plotConfig()
+
 set(0, 'defaultFigurePosition',  [100, 100, 1400, 800])
 
 myred           = [216 30 49]/255;
